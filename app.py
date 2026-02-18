@@ -1,64 +1,82 @@
 import streamlit as st
 import pandas as pd
-import random
 
-# --- CONFIGURAÇÃO DA PÁGINA ---
-st.set_page_config(page_title="4Kids Dictionary", page_icon="📚")
+# Configuração da Interface Web
+st.set_page_config(page_title="4Kids Dictionary", layout="centered")
 
-# Estilo visual para crianças (CSS simples)
-st.markdown("""
-    <style>
-    .main { background-color: #F0F8FF; }
-    .stButton>button { background-color: #FF4B4B; color: white; border-radius: 20px; }
-    h1 { color: #1E90FF; font-family: 'Comic Sans MS'; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- CARREGAMENTO DE DADOS ---
-# Aqui simulamos a leitura dos teus CSVs. 
-# No VS Code, certifica-te que o ficheiro CSV está na mesma pasta.
-@st.cache_data
-def carregar_dados():
-    # Substitui 'teu_arquivo.csv' pelo nome do ficheiro de escopo que me enviaste
-    # df = pd.read_csv("Conteúdos_Escopo.csv") 
-    
-    # Exemplo de estrutura baseada no teu escopo:
-    dados = [
-        {"Português": "Cadeira", "Inglês": "Chair", "Exemplo": "The chair is blue. (A cadeira é azul.)"},
-        {"Português": "Maçã", "Inglês": "Apple", "Exemplo": "An apple a day! (Uma maçã por dia!)"},
-        {"Português": "Escola", "Inglês": "School", "Exemplo": "I go to school. (Eu vou à escola.)"}
-    ]
+def carregar_dicionario():
+    # Integração dos ficheiros fornecidos (PDFs convertidos ou CSVs)
+    # Aqui simulamos a união do '1000-palavras', 'Dicionário_Ingles' e 'Livro'
+    dados = {
+        "Inglês": ["The", "Book", "School", "Noon", "Giant anteater"],
+        "Português": ["O/A", "Livro", "Escola", "Meio-dia", "Tamanduá-bandeira"],
+        "Exemplo": [
+            "The apple is red.", 
+            "I have a new book.", 
+            "Welcome back to school!", 
+            "We eat at noon.",
+            "The giant anteater has a long snout."
+        ]
+    }
     return pd.DataFrame(dados)
 
-df = carregar_dados()
+df_4kids = carregar_dicionario()
 
-# --- INTERFACE DO UTILIZADOR ---
-st.title("📚 4Kids: Dicionário Visual")
-st.subheader("Aprende Inglês de forma divertida!")
+# Título do App Web
+st.title("📚 Dicionário Visual 4Kids")
+st.markdown("---")
 
-# Barra de Busca
-busca = st.text_input("Escreve uma palavra em Português ou Inglês:", "").strip().lower()
+# Sistema de Busca
+palavra_busca = st.text_input("Pesquise uma palavra (PT ou EN):").strip().lower()
 
-if busca:
-    # Filtra na base de dados (procura em ambas as colunas)
-    resultado = df[(df['Português'].str.lower() == busca) | (df['Inglês'].str.lower() == busca)]
+if palavra_busca:
+    # Busca inteligente nas duas colunas
+    resultado = df_4kids[(df_4kids['Inglês'].str.lower() == palavra_busca) | 
+                         (df_4kids['Português'].str.lower() == palavra_busca)]
     
     if not resultado.empty:
-        res = resultado.iloc[0]
-        st.success(f"### 🇬🇧 {res['Inglês']} = 🇵🇹 {res['Português']}")
-        st.info(f"**Frase de Exemplo:** \n\n {res['Exemplo']}")
+        item = resultado.iloc[0]
+        st.success(f"### {item['Inglês']} ↔️ {item['Português']}")
+        st.write(f"**Exemplo de uso:** {item['Exemplo']}")
     else:
-        st.warning("Ups! Não encontramos essa palavra. Tenta outra!")
+        st.error("Palavra não encontrada no escopo escolar.")
 
-# --- SECÇÃO DE JOGOS ---
-st.divider()
-st.sidebar.header("🎮 Centro de Jogos")
-if st.sidebar.button("Gerar Caça-Palavras"):
-    st.write("### 🧩 Caça-Palavras do Dia")
-    palavras_jogo = df['Inglês'].sample(3).tolist()
-    st.write(f"Encontra estas palavras: **{', '.join(palavras_jogo).upper()}**")
-    
-    # Gerar Grade 10x10
-    grade = [[random.choice("ABCDEFGHIJKLMNOPQRSTUVWXYZ") for _ in range(10)] for _ in range(10)]
-    # (Lógica de inserção de palavras seria expandida aqui)
-    st.table(grade)
+# Rodapé Educativo
+st.sidebar.image("https://img.icons8.com/color/96/000000/alphabet.png")
+st.sidebar.info("Este dicionário baseia-se no currículo oficial e nos 3000 termos mais comuns.")
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(page_title="4Kids Web", page_icon="🎨")
+
+# Carregar os dados extraídos
+@st.cache_data
+def load_data():
+    return pd.read_csv("dicionario_final.csv")
+
+df = load_data()
+
+st.title("🌟 Dicionário 4Kids")
+st.write(f"Atualmente com {len(df)} palavras e expressões do seu escopo!")
+
+# Busca
+search = st.text_input("O que queres aprender hoje? (PT ou EN)").strip().lower()
+
+if search:
+    filt = df[(df['Inglês'].str.lower() == search) | (df['Português'].str.lower() == search)]
+    if not filt.empty:
+        st.balloons()
+        row = filt.iloc[0]
+        st.markdown(f"### 🇬🇧 {row['Inglês']} significa 🇵🇹 {row['Português']}")
+        st.info(f"💡 **Frase de exemplo:** {row['Exemplo']}")
+    else:
+        st.warning("Ainda não tenho essa palavra. Tenta 'School' ou 'Book'!")
+
+# Sidebar com Jogos baseados no CSV
+st.sidebar.title("🎮 Jogos")
+if st.sidebar.button("Cruzadinha Rápida"):
+    palavras_aleatorias = df.sample(5)['Inglês'].tolist()
+    st.sidebar.write("Dicas para a cruzadinha:")
+    for p in palavras_aleatorias:
+        traducao = df[df['Inglês'] == p]['Português'].values[0]
+        st.sidebar.write(f"- Qual o inglês para: **{traducao}**?")
